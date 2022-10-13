@@ -8,7 +8,12 @@ import os
 
 #flask instance
 app = Flask(__name__)
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///users.db'
+
+#sqlite db config
+#app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///users.db'
+
+#mysql db config --> mysql://username:password@localhost/db_nameex
+app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://root:AlMax579@localhost/users'
 app.config['SECRET_KEY'] = os.urandom(32)
 db = SQLAlchemy(app = app)
 
@@ -58,7 +63,6 @@ def name():
 @app.route('/user/add', methods = ['GET', 'POST'])
 def add_user():
     user_name = None
-    email = None
     user_form = UserForm()
 
     if user_form.validate_on_submit():
