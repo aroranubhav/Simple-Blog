@@ -1,16 +1,37 @@
 from flask import Flask, render_template, flash
 from flask_wtf import FlaskForm
-from wtforms import FormField, StringField, SubmitField
-from wtforms.validators import DataRequired
+from wtforms import FormField, StringField, SubmitField, EmailField
+from wtforms.validators import DataRequired, Email
+from flask_sqlalchemy import SQLAlchemy
+from datetime import datetime
 import os
 
 #flask instance
 app = Flask(__name__)
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///users.db'
 app.config['SECRET_KEY'] = os.urandom(32)
+db = SQLAlchemy(app = app)
+
+class Users(db.Model):
+    __tablename__ = 'users'
+    id = db.Column(db.Integer, primary_key = True)
+    name = db.Column(db.String(100), nullable = False)
+    email = db.Column(db.String(120), nullable = False, unique = True)
+    date_added = db.Column(db.DateTime, default = datetime.utcnow)
+
+    def __repr__(self) -> str:
+        return f'<Name {self.name}>'
 
 class NameForm(FlaskForm):
-    name = StringField("What's your name?", validators = [DataRequired()])
+    name = StringField("What's your name?", validators = [DataRequired(message = 'This field requires a value')])
     submit = SubmitField("Submit")
+
+class UserForm(FlaskForm):
+    name = StringField('Name', validators = [DataRequired(message = 'This field requires a value')])
+    email = EmailField('Email', validators = [DataRequired(message = 'This field requires a value'), 
+                                Email(message = 'Please input a vaild email address!')])
+    submit = SubmitField('Submit')
+
 
 @app.route('/')
 def index():
@@ -19,16 +40,6 @@ def index():
 @app.route('/user/<name>')
 def user(name):
     return render_template('user.html', name = name)
-
-#page not found handler
-@app.errorhandler(404)
-def page_not_found(e):
-    return render_template('404.html'), 404
-
-#internal server error handler
-@app.errorhandler(500)
-def internal_server_handler(e):
-    return render_template('500.html'), 500
 
 @app.route('/name', methods = ['GET', 'POST'])
 def name():
@@ -43,3 +54,37 @@ def name():
     return render_template('name.html',
         name = name, 
         form = form)
+
+@app.route('/user/add', methods = ['GET', 'POST'])
+def add_user():
+    user_name = None
+    email = None
+    user_form = UserForm()
+
+    if user_form.validate_on_submit():
+        user_name = user_form.name.data
+        user_email = user_form.email.data
+        user = Users.query.filter_by(email = user_email).first()
+        if user is None:
+            users = Users(name = user_name, email = user_email)
+            db.session.add(users)
+            db.session.commit() 
+            user_form.name.data = ''
+            user_form.email.data = ''
+            flash('User {} with email: {} added successfully!'.format(user_name, user_email))
+    
+    all_users = Users.query.order_by(Users.date_added)
+    return render_template('add_user.html',
+        name = user_name, 
+        form = user_form,
+        users = all_users)
+
+#page not found handler
+@app.errorhandler(404)
+def page_not_found(e):
+    return render_template('404.html'), 404
+
+#internal server error handler
+@app.errorhandler(500)
+def internal_server_handler(e):
+    return render_template('500.html'), 500
