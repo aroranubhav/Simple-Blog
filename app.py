@@ -1,4 +1,4 @@
-from flask import Flask, render_template, flash
+from flask import Flask, render_template, flash, request
 from flask_wtf import FlaskForm
 from wtforms import FormField, StringField, SubmitField, EmailField
 from wtforms.validators import DataRequired, Email
@@ -82,6 +82,32 @@ def add_user():
         name = user_name, 
         form = user_form,
         users = all_users)
+
+@app.route('/update/<user_id>', methods = ['GET', 'POST'])
+def update_user(user_id):
+    form = UserForm()
+    updated_user = Users.query.get_or_404(user_id)
+    if request.method == 'POST':
+        updated_user.name = request.form['name']
+        updated_user.email = request.form['email']
+        try:
+            db.session.commit()
+            flash('User updated successfully!')
+            return render_template('update_user.html', 
+                form = form,
+                updated_user = updated_user)
+        except:
+            db.session.rollback()
+            flash('Error! Failed to update the user!')
+            return render_template('update_user.html', 
+                form = form,
+                updated_user = updated_user)
+        finally:
+            db.session.close()
+    else:
+        return render_template('update_user.html', 
+                form = form,
+                updated_user = updated_user)
 
 #page not found handler
 @app.errorhandler(404)
