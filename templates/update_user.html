@@ -3,7 +3,7 @@
 {% block content %}
     {% for message in get_flashed_messages() %}
         <div class="alert alert-secondary alert-dismissible fade show" role="alert">
-            Hey {{ name }} - {{ message }}
+                {{ name }} - {{ message }}
             <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
         </div>
     {% endfor %}
@@ -14,7 +14,7 @@
             {% for user in users %}
                 <tr>
                     <td>
-                        <h5>{{ user.id }} . {{ user.name }} -- {{ user.email }}</h5>
+                        <h5>{{ user.id }} . {{ user.name }} -- {{ user.email }} -- {{ user.job_profile }}</h5>
                     </td>
                 </tr>
             {% endfor %}
@@ -30,6 +30,9 @@
                 <br/>
                 {{ form.email.label(class="form-label") }}
                 {{ form.email(class="form-control", value = updated_user.email) }}
+                <br/>
+                {{ form.job_profile.label(class="form-label") }}
+                {{ form.job_profile(class="form-control", value = updated_user.job_profile) }}
                 <br/>
                 {{ form.submit(class="btn btn-secondary") }}
             

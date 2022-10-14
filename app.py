@@ -4,6 +4,7 @@ from wtforms import FormField, StringField, SubmitField, EmailField
 from wtforms.validators import DataRequired, Email
 from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime
+from flask_migrate import Migrate
 import os
 
 #flask instance
@@ -13,15 +14,23 @@ app = Flask(__name__)
 #app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///users.db'
 
 #mysql db config --> mysql://username:password@localhost/db_nameex
-app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://root:AlMax579@localhost/users'
+#app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://root:AlMax579@localhost/users'
+
+#setting up postgres
+app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://maxi:AlMax579@localhost:5432/users'
 app.config['SECRET_KEY'] = os.urandom(32)
+
+#initialising sqlalchemy instance
 db = SQLAlchemy(app = app)
+
+migrate = Migrate(app = app, db = db)
 
 class Users(db.Model):
     __tablename__ = 'users'
     id = db.Column(db.Integer, primary_key = True)
     name = db.Column(db.String(100), nullable = False)
     email = db.Column(db.String(120), nullable = False, unique = True)
+    job_profile = db.Column(db.String(120))
     date_added = db.Column(db.DateTime, default = datetime.utcnow)
 
     def __repr__(self) -> str:
@@ -35,8 +44,8 @@ class UserForm(FlaskForm):
     name = StringField('Name', validators = [DataRequired(message = 'This field requires a value')])
     email = EmailField('Email', validators = [DataRequired(message = 'This field requires a value'), 
                                 Email(message = 'Please input a vaild email address!')])
+    job_profile = StringField('Job Profile')
     submit = SubmitField('Submit')
-
 
 @app.route('/')
 def index():
@@ -68,13 +77,15 @@ def add_user():
     if user_form.validate_on_submit():
         user_name = user_form.name.data
         user_email = user_form.email.data
+        job_profile = user_form.job_profile.data
         user = Users.query.filter_by(email = user_email).first()
         if user is None:
-            users = Users(name = user_name, email = user_email)
+            users = Users(name = user_name, email = user_email, job_profile = job_profile)
             db.session.add(users)
             db.session.commit() 
             user_form.name.data = ''
             user_form.email.data = ''
+            user_form.job_profile.data = ''
             flash('User {} with email: {} added successfully!'.format(user_name, user_email))
     
     all_users = Users.query.order_by(Users.date_added)
@@ -90,6 +101,7 @@ def update_user(user_id):
     if request.method == 'POST':
         updated_user.name = request.form['name']
         updated_user.email = request.form['email']
+        updated_user.job_profile = request.form['job_profile']
         try:
             db.session.commit()
             flash('User updated successfully!')
