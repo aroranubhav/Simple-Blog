@@ -1,4 +1,4 @@
-from flask import Flask, render_template, flash, request
+from flask import Flask, render_template, flash, request, redirect, url_for
 from flask_wtf import FlaskForm
 from wtforms import FormField, StringField, SubmitField, EmailField
 from wtforms.validators import DataRequired, Email
@@ -6,6 +6,7 @@ from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime
 from flask_migrate import Migrate
 import os
+import sys
 
 #flask instance
 app = Flask(__name__)
@@ -120,6 +121,27 @@ def update_user(user_id):
         return render_template('update_user.html', 
                 form = form,
                 updated_user = updated_user)
+
+@app.route('/delete/<user_id>')
+def delete_user(user_id):
+    error = False
+    try:
+        user = Users.query.get_or_404(user_id)
+        db.session.delete(user)
+        db.session.commit()
+    except:
+        error = True
+        print(sys.exc_info())
+        db.session.rollback()
+    finally:
+        db.session.close()
+
+    if error:
+        flash('An error occured while deleting the user.')
+    else:
+        flash('Successfully deleted the user.')
+
+    return redirect(url_for('add_user'))
 
 #page not found handler
 @app.errorhandler(404)
