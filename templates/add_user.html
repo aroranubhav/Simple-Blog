@@ -39,6 +39,12 @@
                 {{ form.job_profile.label(class="form-label") }}
                 {{ form.job_profile(class="form-control") }}
                 <br/>
+                {{ form.password.label(class="form-label") }}
+                {{ form.password(class="form-control") }}
+                <br/>
+                {{ form.password_confirm.label(class="form-label") }}
+                {{ form.password_confirm(class="form-control") }}
+                <br/>
                 {{ form.submit(class="btn btn-secondary") }}
             
             </form>
@@ -49,9 +55,10 @@
             {% for user in users %}
                 <tr>
                     <td>
-                        <h5>{{ user.id }} . <a href="{{ url_for('update_user', user_id = user.id) }}">{{ user.name }}</a> -- 
+                        <h5>
+                            {{ user.id }} . <a href="{{ url_for('update_user', user_id = user.id) }}"> {{ user.name }} </a> -- 
                             {{ user.email }} -- {{ user.job_profile }} --
-                             <a href = "{{ url_for('delete_user', user_id = user.id)}}"> Delete </a>
+                             <a href = "{{ url_for('delete_user', user_id = user.id)}}"> Delete </a> 
                         </h5>
                     </td>
                 </tr>

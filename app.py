@@ -1,12 +1,13 @@
 from flask import Flask, render_template, flash, request, redirect, url_for
 from flask_wtf import FlaskForm
-from wtforms import FormField, StringField, SubmitField, EmailField
-from wtforms.validators import DataRequired, Email
+from wtforms import FormField, StringField, SubmitField, EmailField, PasswordField, BooleanField, ValidationError
+from wtforms.validators import DataRequired, Email, EqualTo, Length
 from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime
 from flask_migrate import Migrate
 import os
 import sys
+from werkzeug.security import generate_password_hash, check_password_hash
 
 #flask instance
 app = Flask(__name__)
@@ -33,6 +34,18 @@ class Users(db.Model):
     email = db.Column(db.String(120), nullable = False, unique = True)
     job_profile = db.Column(db.String(120))
     date_added = db.Column(db.DateTime, default = datetime.utcnow)
+    password_hash = db.Column(db.String(150))
+
+    @property
+    def password(self):
+        raise AttributeError('Password is not in a readable format!')
+    
+    @password.setter
+    def password(self, password):
+        self.password_hash = generate_password_hash(password = password)
+    
+    def verify_password(self, password):
+        return check_password_hash(pwhash = self.password_hash, password = password)
 
     def __repr__(self) -> str:
         return f'<Name {self.name}>'
@@ -46,6 +59,9 @@ class UserForm(FlaskForm):
     email = EmailField('Email', validators = [DataRequired(message = 'This field requires a value'), 
                                 Email(message = 'Please input a vaild email address!')])
     job_profile = StringField('Job Profile')
+    password = PasswordField('Password', validators = [DataRequired(), EqualTo('password_confirm',
+                                message = 'Passwords must match!')])
+    password_confirm = PasswordField('Confirm Password')
     submit = SubmitField('Submit')
 
 @app.route('/')
@@ -79,17 +95,24 @@ def add_user():
         user_name = user_form.name.data
         user_email = user_form.email.data
         job_profile = user_form.job_profile.data
+        user_pwd = user_form.password.data
         user = Users.query.filter_by(email = user_email).first()
         if user is None:
-            users = Users(name = user_name, email = user_email, job_profile = job_profile)
-            db.session.add(users)
+            #hashed_pwd = generate_password_hash(user_pwd, "sha256")
+            user = Users(name = user_name, email = user_email,
+                    job_profile = job_profile)
+            #using password setter property to set the user password
+            user.password = user_pwd
+            db.session.add(user) 
             db.session.commit() 
             user_form.name.data = ''
             user_form.email.data = ''
             user_form.job_profile.data = ''
+            user_form.password.data = ''
             flash('User {} with email: {} added successfully!'.format(user_name, user_email))
     
     all_users = Users.query.order_by(Users.date_added)
+
     return render_template('add_user.html',
         name = user_name, 
         form = user_form,
