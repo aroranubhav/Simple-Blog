@@ -1,3 +1,6 @@
+from crypt import methods
+from pydoc import describe
+from turtle import pos
 from flask import Flask, render_template, flash, request, redirect, url_for, make_response
 from flask_wtf import FlaskForm
 from wtforms import FormField, StringField, SubmitField, EmailField, PasswordField, BooleanField, ValidationError
@@ -8,6 +11,7 @@ from flask_migrate import Migrate
 import os
 import sys
 from werkzeug.security import generate_password_hash, check_password_hash
+from wtforms.widgets import TextArea
 
 #flask instance
 app = Flask(__name__)
@@ -49,6 +53,22 @@ class Users(db.Model):
 
     def __repr__(self) -> str:
         return f'<Name {self.name}>'
+
+class Posts(db.Model):
+    id = db.Column(db.Integer, primary_key = True)
+    title = db.Column(db.String(250))
+    content = db.Column(db.Text)
+    author = db.Column(db.String(250))
+    date_posted = db.Column(db.DateTime, default = datetime.utcnow)
+    slug = db.Column(db.String(250))
+
+class PostForm(FlaskForm):
+    title = StringField('Title', validators = [DataRequired(message = 'This field requires a value')])
+    content = StringField('Content', validators =  [DataRequired(message = 'This field requires a value')], 
+        widget = TextArea())
+    author = StringField('Author', validators =  [DataRequired(message = 'This field requires a value')])
+    slug = StringField('Slug', validators =  [DataRequired(message = 'This field requires a value')])
+    submit = SubmitField('Submit')
 
 class NameForm(FlaskForm):
     name = StringField("What's your name?", validators = [DataRequired(message = 'This field requires a value')])
@@ -208,6 +228,33 @@ def delete_user(user_id):
         flash('Successfully deleted the user.')
 
     return redirect(url_for('add_user'))
+
+@app.route('/add-post', methods = ['GET', 'POST'])
+def add_post():
+    form = PostForm()
+    
+    try:
+        if form.validate_on_submit():
+            post = Posts()
+            form.populate_obj(post)
+            #clearing the form
+            form.title.data = ''
+            form.author.data = ''
+            form.content.data = ''
+            form.slug.data = ''
+            #adding post to db
+            db.session.add(post)
+            db.session.commit()
+            flash('Blog Post submitted successfully!')
+    except:
+        db.session.rollback()
+        print(sys.exc_info())
+        flash('There was an error creating the Blog Post.')
+    finally:
+        db.session.close()
+    
+    return render_template('add_post.html', 
+            form = form)
 
 #page not found handler
 @app.errorhandler(404)
