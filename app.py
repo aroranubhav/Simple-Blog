@@ -256,10 +256,10 @@ def add_post():
     return render_template('add_post.html', 
             form = form)
 
-@app.route('/blog-posts', methods = ['GET'])
+@app.route('/blog-posts')
 def get_blog_posts():
     try:
-        posts = Posts.query.all()
+        posts = Posts.query.order_by(Posts.date_posted).all()
     except:
         print(sys.exc_info())
     return render_template('blog_posts.html', 
