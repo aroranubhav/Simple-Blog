@@ -232,7 +232,7 @@ def delete_user(user_id):
 @app.route('/add-post', methods = ['GET', 'POST'])
 def add_post():
     form = PostForm()
-    
+
     try:
         if form.validate_on_submit():
             post = Posts()
@@ -255,6 +255,16 @@ def add_post():
     
     return render_template('add_post.html', 
             form = form)
+
+@app.route('/blog-posts', methods = ['GET'])
+def get_blog_posts():
+    try:
+        posts = Posts.query.all()
+    except:
+        print(sys.exc_info())
+    return render_template('blog_posts.html', 
+            posts = posts)
+
 
 #page not found handler
 @app.errorhandler(404)
