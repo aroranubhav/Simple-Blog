@@ -265,6 +265,10 @@ def get_blog_posts():
     return render_template('blog_posts.html', 
             posts = posts)
 
+@app.route('/posts/<int:post_id>')
+def get_post(post_id):
+    post = Posts.query.get_or_404(post_id)
+    return render_template('blog_post.html', post = post)
 
 #page not found handler
 @app.errorhandler(404)
