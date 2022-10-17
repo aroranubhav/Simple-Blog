@@ -1,4 +1,4 @@
-from flask import Flask, render_template, flash, request, redirect, url_for
+from flask import Flask, render_template, flash, request, redirect, url_for, make_response
 from flask_wtf import FlaskForm
 from wtforms import FormField, StringField, SubmitField, EmailField, PasswordField, BooleanField, ValidationError
 from wtforms.validators import DataRequired, Email, EqualTo, Length
@@ -54,6 +54,11 @@ class NameForm(FlaskForm):
     name = StringField("What's your name?", validators = [DataRequired(message = 'This field requires a value')])
     submit = SubmitField("Submit")
 
+class PasswordForm(FlaskForm):
+    email = EmailField('Email', validators = [DataRequired(message = 'This field requires a value')])
+    password = PasswordField('Password', validators = [DataRequired()])
+    submit = SubmitField('Submit')
+
 class UserForm(FlaskForm):
     name = StringField('Name', validators = [DataRequired(message = 'This field requires a value')])
     email = EmailField('Email', validators = [DataRequired(message = 'This field requires a value'), 
@@ -72,6 +77,12 @@ def index():
 def user(name):
     return render_template('user.html', name = name)
 
+@app.route('/date')
+def get_current_date():
+    return {
+        'DateTime' : datetime.now()
+    }
+
 @app.route('/name', methods = ['GET', 'POST'])
 def name():
     name = None
@@ -84,6 +95,38 @@ def name():
 
     return render_template('name.html',
         name = name, 
+        form = form)
+
+@app.route('/test_pwd', methods = ['GET', 'POST'])
+def test_pwd():
+    email = None
+    pwd = None
+    pwd_to_check = None
+    passed = None
+    form = PasswordForm()
+    user = None
+
+    #validate form
+    if form.validate_on_submit():
+        email = form.email.data
+        pwd = form.password.data
+        user = Users.query.filter_by(email = email).first()
+
+        if user is not None:
+            passed = check_password_hash(pwhash = user.password_hash, password = pwd)
+        else:
+            passed = False
+
+        form.email.data = ''
+        form.password.data = ''
+
+        #flash('Form submitted successfully!')  
+    
+    return render_template('pwd_test.html', 
+        email = email, 
+        password = pwd,
+        user = user,
+        passed = passed,
         form = form)
 
 @app.route('/user/add', methods = ['GET', 'POST'])

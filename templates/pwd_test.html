@@ -1,0 +1,42 @@
+{% extends 'base.html' %}
+{% block content %}
+
+    {% for message in get_flashed_messages() %}
+        <div class="alert alert-secondary alert-dismissible fade show" role="alert">
+            Hey {{ name }} - {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    {% endfor %}
+
+    {% if email %}
+        <h1>Email : {{ email }}</h1>
+        <h1>Password : {{ password }}</h1>
+        <br/>
+        <h2>Info from the website : </h2><br/>
+        <h4>Name : {{ user.name }}</h4><br/>
+        <h4>Email : {{ user.email }}</h4><br/>
+        <h4>Password : {{ user.password_hash }}</h4><br/>
+        <h4>Password's match : {{ passed }}</h4><br/>
+        
+    {% else %}
+        <h1>What's your email and password?</h1>
+        <br/>
+
+        <form method="POST">
+            {{ form.hidden_tag() }}
+
+            {{ form.email.label(class="form-label") }}
+            {{ form.email(class="form-control") }}
+            <br/>
+
+            {{ form.password.label(class="form-label") }}
+            {{ form.password(class="form-control") }}
+            <br/>
+            {{ form.submit(class="btn btn-secondary") }}
+
+        </form>
+
+    {% endif %}
+
+{% endblock %}
+    
