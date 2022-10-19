@@ -289,6 +289,22 @@ def edit_blog_post(post_id):
         form = form, 
         post = post)
 
+@app.route('/posts/delete/<int:post_id>')
+def delete_blog_post(post_id):
+    post = Posts.query.get_or_404(post_id)
+
+    try:
+        db.session.delete(post)
+        db.session.commit()
+        flash('Blog post deleted successfully!')
+    except:
+        db.session.rollback()
+        flash('An Error occurred while deleting the post!')
+    finally:
+        db.session.close()
+   
+    return redirect(url_for('get_blog_posts'))
+
 #page not found handler
 @app.errorhandler(404) 
 def page_not_found(e):

@@ -2,6 +2,13 @@
 
 {% block content %}
     
+    {% for message in get_flashed_messages() %}
+        <div class="alert alert-secondary alert-dismissible fade show" role="alert">
+                {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    {% endfor %}
+
     <h1>Blog Posts : </h1>
     
    {% for post in posts %}
@@ -15,9 +22,16 @@
             <h3>{{ post.content }}</h3>
             <h5> Date-posted : {{ post.date_posted }}</h5> 
             <br/>
+            
             <a href="{{ url_for('get_post', post_id = post.id) }}" class="btn btn-outline-secondary" >
                 View Post
             </a>
+
+            <a href="{{ url_for('edit_blog_post', post_id = post.id)}}" class="btn btn-outline-warning">
+                Edit Post
+            </a>
+
+            <a href="{{ url_for('delete_blog_post', post_id = post.id) }}" class="btn btn-outline-danger">Delete Post</a>
         </div>
 
    {% endfor %}
