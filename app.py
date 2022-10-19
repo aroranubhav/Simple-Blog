@@ -1,6 +1,3 @@
-from crypt import methods
-from pydoc import describe
-from turtle import pos
 from flask import Flask, render_template, flash, request, redirect, url_for, make_response
 from flask_wtf import FlaskForm
 from wtforms import FormField, StringField, SubmitField, EmailField, PasswordField, BooleanField, ValidationError
@@ -270,8 +267,30 @@ def get_post(post_id):
     post = Posts.query.get_or_404(post_id)
     return render_template('blog_post.html', post = post)
 
+@app.route('/posts/edit/<int:post_id>', methods = ['GET', 'POST'])
+def edit_blog_post(post_id):
+    print(post_id)
+    post = Posts.query.get_or_404(post_id)
+    form = PostForm()
+    
+    if form.validate_on_submit():
+        form.populate_obj(post)
+        db.session.add(post)
+        db.session.commit()
+        flash('Blog post updated successfully!')
+        return redirect(url_for('get_post', post_id = post.id))
+    
+    form.title.data = post.title
+    form.author.data = post.author
+    form.slug.data = post.slug
+    form.content.data = post.content
+
+    return render_template('edit_blog_post.html',
+        form = form, 
+        post = post)
+
 #page not found handler
-@app.errorhandler(404)
+@app.errorhandler(404) 
 def page_not_found(e):
     return render_template('404.html'), 404
 
