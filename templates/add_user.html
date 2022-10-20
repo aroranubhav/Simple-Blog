@@ -16,7 +16,7 @@
             {% for user in users %}
                 <tr>
                     <td>
-                        <h5>{{ user.id }} . {{ user.name }} -- {{ user.email }} -- 
+                        <h5>{{ user.id }} . {{ user.name }} --  {{ user.user_name }} --{{ user.email }} -- 
                             {{ user.job_profile }} --
                             <a href = "{{ url_for('delete_user', user_id = user.id)}}"> Delete </a>
                         </h5>
@@ -32,6 +32,9 @@
 
                 {{ form.name.label(class="form-label") }}
                 {{ form.name(class="form-control") }}
+                <br/>
+                {{ form.user_name.label(class="form-label") }}
+                {{ form.user_name(class="form-control") }}
                 <br/>
                 {{ form.email.label(class="form-label") }}
                 {{ form.email(class="form-control") }}
@@ -57,7 +60,7 @@
                     <td>
                         <h5>
                             {{ user.id }} . <a href="{{ url_for('update_user', user_id = user.id) }}"> {{ user.name }} </a> -- 
-                            {{ user.email }} -- {{ user.job_profile }} --
+                            {{ user.user_name }} -- {{ user.email }} -- {{ user.job_profile }} --
                              <a href = "{{ url_for('delete_user', user_id = user.id)}}"> Delete </a> 
                         </h5>
                     </td>

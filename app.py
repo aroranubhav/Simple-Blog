@@ -1,3 +1,4 @@
+from tokenize import String
 from flask import Flask, render_template, flash, request, redirect, url_for, make_response
 from flask_wtf import FlaskForm
 from wtforms import FormField, StringField, SubmitField, EmailField, PasswordField, BooleanField, ValidationError
@@ -9,6 +10,7 @@ import os
 import sys
 from werkzeug.security import generate_password_hash, check_password_hash
 from wtforms.widgets import TextArea
+from flask_login import UserMixin, login_user, logout_user, current_user
 
 #flask instance
 app = Flask(__name__)
@@ -28,10 +30,11 @@ db = SQLAlchemy(app = app)
 
 migrate = Migrate(app = app, db = db)
 
-class Users(db.Model):
+class Users(db.Model, UserMixin):
     __tablename__ = 'users'
     id = db.Column(db.Integer, primary_key = True)
     name = db.Column(db.String(100), nullable = False)
+    user_name = db.Column(db.String(20), nullable = False, unique = True)
     email = db.Column(db.String(120), nullable = False, unique = True)
     job_profile = db.Column(db.String(120))
     date_added = db.Column(db.DateTime, default = datetime.utcnow)
@@ -78,6 +81,7 @@ class PasswordForm(FlaskForm):
 
 class UserForm(FlaskForm):
     name = StringField('Name', validators = [DataRequired(message = 'This field requires a value')])
+    user_name = StringField('Username', validators = [DataRequired(message = 'This field requires a value')])
     email = EmailField('Email', validators = [DataRequired(message = 'This field requires a value'), 
                                 Email(message = 'Please input a vaild email address!')])
     job_profile = StringField('Job Profile')
@@ -86,9 +90,24 @@ class UserForm(FlaskForm):
     password_confirm = PasswordField('Confirm Password')
     submit = SubmitField('Submit')
 
+class LoginForm(FlaskForm):
+    user_name = StringField('Username', validators = [DataRequired(message = 'This field requires a value')])
+    password = PasswordField('Password', validators = [DataRequired(message = 'This field requires a value')])
+    submit = SubmitField('Login')
+
 @app.route('/')
 def index():
     return render_template('index.html')
+
+@app.route('/login', methods = ['GET', 'POST'])
+def login():
+    form = LoginForm()
+    return render_template('login.html',
+        form = form)
+
+@app.route('/dashboard')
+def dashboard():
+    return render_template('dashboard.html')
 
 @app.route('/user/<name>')
 def user(name):
@@ -148,24 +167,26 @@ def test_pwd():
 
 @app.route('/user/add', methods = ['GET', 'POST'])
 def add_user():
-    user_name = None
+    name = None
     user_form = UserForm()
 
     if user_form.validate_on_submit():
-        user_name = user_form.name.data
+        name = user_form.name.data
+        user_name = user_form.user_name.data
         user_email = user_form.email.data
         job_profile = user_form.job_profile.data
         user_pwd = user_form.password.data
         user = Users.query.filter_by(email = user_email).first()
         if user is None:
             #hashed_pwd = generate_password_hash(user_pwd, "sha256")
-            user = Users(name = user_name, email = user_email,
+            user = Users(name = name, user_name = user_name, email = user_email,
                     job_profile = job_profile)
             #using password setter property to set the user password
             user.password = user_pwd
             db.session.add(user) 
             db.session.commit() 
             user_form.name.data = ''
+            user_form.user_name.data = ''
             user_form.email.data = ''
             user_form.job_profile.data = ''
             user_form.password.data = ''
@@ -174,7 +195,7 @@ def add_user():
     all_users = Users.query.order_by(Users.date_added)
 
     return render_template('add_user.html',
-        name = user_name, 
+        name = name, 
         form = user_form,
         users = all_users)
 
