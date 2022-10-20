@@ -10,7 +10,7 @@ import os
 import sys
 from werkzeug.security import generate_password_hash, check_password_hash
 from wtforms.widgets import TextArea
-from flask_login import UserMixin, login_user, logout_user, current_user
+from flask_login import UserMixin, login_user, logout_user, current_user, LoginManager, login_required
 
 #flask instance
 app = Flask(__name__)
@@ -29,6 +29,14 @@ app.config['SECRET_KEY'] = os.urandom(32)
 db = SQLAlchemy(app = app)
 
 migrate = Migrate(app = app, db = db)
+
+login_manager = LoginManager()
+login_manager.init_app(app = app)
+login_manager.login_view = 'login'
+
+@login_manager.user_loader
+def load_user(user_id):
+    return Users.query.get(int(user_id))
 
 class Users(db.Model, UserMixin):
     __tablename__ = 'users'
@@ -102,10 +110,29 @@ def index():
 @app.route('/login', methods = ['GET', 'POST'])
 def login():
     form = LoginForm()
+    if form.validate_on_submit():
+        user = Users.query.filter_by(user_name = form.user_name.data).first()
+        if user:
+            if check_password_hash(user.password_hash, form.password.data):
+                login_user(user = user)
+                flash('You are successfully logged in!')
+                return redirect(url_for('dashboard'))
+            else:
+                flash('Please check the password you have entered and try again!')
+        else:
+            flash('Username you have entered does not exist, try again!')
+
     return render_template('login.html',
         form = form)
 
-@app.route('/dashboard')
+@app.route('/logout', methods = ['GET', 'POST'])
+def logout():
+    logout_user()
+    flash('You have been successfully logged out.')
+    return redirect(url_for('login'))
+
+@app.route('/dashboard', methods = ['GET', 'POST'])
+@login_required
 def dashboard():
     return render_template('dashboard.html')
 
