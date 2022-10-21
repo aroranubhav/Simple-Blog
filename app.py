@@ -60,7 +60,7 @@ class Users(db.Model, UserMixin):
         return check_password_hash(pwhash = self.password_hash, password = password)
 
     def __repr__(self) -> str:
-        return f'<Name {self.name}>'
+        return f'<Name {self.name}> Username {self.user_name} Email {self.email}'
 
 class Posts(db.Model):
     id = db.Column(db.Integer, primary_key = True)

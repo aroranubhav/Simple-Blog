@@ -3,18 +3,14 @@
 
     {% for message in get_flashed_messages() %}
         <div class="alert alert-secondary alert-dismissible fade show" role="alert">
-                { message }}
+                {{ message }}
             <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
         </div>
     {% endfor %}
 
     <br/>
     
-    <h1>Dashboard</h1>
-
-    <div class="shadow p-3 mb-5 bg-body rounded">
-        <h2>You are logged in!</h2>
-    </div>
+    <h1>User Dashboard</h1>
 
     <a href="{{ url_for('logout') }}" class="btn btn-outline-warning">Logout</a>
 
