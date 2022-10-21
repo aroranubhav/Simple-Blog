@@ -10,7 +10,23 @@
 
     <br/>
     
-    <h1>User Dashboard</h1>
+    <div class="card">
+        <div class="card-header">
+            <h1><strong>{{ current_user.name }}'s Dashboard</strong></h1>
+        </div>
+        <div class="card-body">
+            <h1 class="card-title">
+                <strong>{{ current_user.name }}</strong>
+            </h1>
+            <p class="card-text">
+                <h5>Username : {{ current_user.user_name }}</h5>
+                <h5>Email : {{ current_user.email }}</h5>
+                <h5>Job Profile : {{ current_user.job_profile }}</h5>
+                <h5>Member Since : {{ current_user.date_added }} </h5>
+            </p>
+        </div>
+    </div>
+    <br/>
 
     <a href="{{ url_for('logout') }}" class="btn btn-outline-warning">Logout</a>
 
