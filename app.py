@@ -317,6 +317,7 @@ def get_post(post_id):
     return render_template('blog_post.html', post = post)
 
 @app.route('/posts/edit/<int:post_id>', methods = ['GET', 'POST'])
+@login_required
 def edit_blog_post(post_id):
     print(post_id)
     post = Posts.query.get_or_404(post_id)
