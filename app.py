@@ -182,8 +182,10 @@ def add_user():
         users = all_users)
 
 @app.route('/update/<user_id>', methods = ['GET', 'POST'])
+@login_required
 def update_user(user_id):
     form = UserForm()
+    user_id = int(user_id)
     updated_user = Users.query.get_or_404(user_id)
     if request.method == 'POST':
         #form.populate_obj(updated_user)
@@ -196,19 +198,22 @@ def update_user(user_id):
             flash('User updated successfully!')
             return render_template('update_user.html', 
                 form = form,
-                updated_user = updated_user)
+                updated_user = updated_user,
+                user_id = user_id)
         except:
             db.session.rollback()
             flash('Error! Failed to update the user!')
             return render_template('update_user.html', 
                 form = form,
-                updated_user = updated_user)
+                updated_user = updated_user,
+                user_id = user_id)
         finally:
             db.session.close()
     else:
         return render_template('update_user.html', 
                 form = form,
-                updated_user = updated_user)
+                updated_user = updated_user, 
+                user_id = user_id)
 
 @app.route('/delete/<user_id>')
 def delete_user(user_id):
