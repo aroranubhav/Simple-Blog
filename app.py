@@ -1,4 +1,6 @@
 from tokenize import String
+from turtle import update
+from typing import final
 from flask import Flask, render_template, flash, request, redirect, url_for, make_response
 from flask_wtf import FlaskForm
 from wtforms import FormField, StringField, SubmitField, EmailField, PasswordField, BooleanField, ValidationError
@@ -60,7 +62,7 @@ class Users(db.Model, UserMixin):
         return check_password_hash(pwhash = self.password_hash, password = password)
 
     def __repr__(self) -> str:
-        return f'<Name {self.name}> Username {self.user_name} Email {self.email}'
+        return f'<Name {self.name}> Username {self.user_name} Email {self.email} Password {self.password_hash}'
 
 class Posts(db.Model):
     id = db.Column(db.Integer, primary_key = True)
@@ -135,7 +137,36 @@ def logout():
 @app.route('/dashboard', methods = ['GET', 'POST'])
 @login_required
 def dashboard():
-    return render_template('dashboard.html')
+    form = UserForm()
+    user_id = current_user.id
+    updated_user = Users.query.get_or_404(user_id)
+    if updated_user and request.method == 'POST':
+        #form.populate_obj(updated_user)
+        updated_user.name = request.form['name']
+        updated_user.user_name = request.form['user_name']
+        updated_user.email = request.form['email']
+        updated_user.job_profile = request.form['job_profile']
+        try:
+            db.session.commit()
+            flash('User updated successfully!')
+            return render_template('dashboard.html', 
+                form = form,
+                updated_user = updated_user)
+        except:
+            db.session.rollback()
+            flash('Error! Failed to update the user!')
+            return render_template('dashboard.html', 
+                form = form,
+                updated_user = updated_user)
+        finally:
+            db.session.close()
+    else:
+        if not user:
+            flash('Sorry could not find the user!!')
+        else:
+            return render_template('dashboard.html', 
+                form = form, 
+                updated_user = updated_user)
 
 @app.route('/user/<name>')
 def user(name):
@@ -232,7 +263,9 @@ def update_user(user_id):
     form = UserForm()
     updated_user = Users.query.get_or_404(user_id)
     if request.method == 'POST':
+        #form.populate_obj(updated_user)
         updated_user.name = request.form['name']
+        updated_user.user_name = request.form['user_name']
         updated_user.email = request.form['email']
         updated_user.job_profile = request.form['job_profile']
         try:

@@ -28,6 +28,40 @@
     </div>
     <br/>
 
+    <a href="{{ url_for('update_user', user_id = current_user.id)}}" class="btn btn-outline-secondary">Update Profile</a>
     <a href="{{ url_for('logout') }}" class="btn btn-outline-warning">Logout</a>
+    <a href="{{ url_for('delete_user', user_id = current_user.id) }}" class="btn btn-outline-danger">Delete</a>
+    <br/><br/>
+
+    <div class="card">
+        <div class="card-header">
+            <h1><strong>Update Profile</strong></h1>
+        </div>
+        <div class="card-body">
+            <p class="card-text">
+                <form action="/dashboard" method="POST">
+
+                    {{ form.hidden_tag() }}
+    
+                    {{ form.name.label(class="form-label") }}
+                    {{ form.name(class="form-control", value = updated_user.name) }}
+                    <br/>
+                    {{ form.user_name.label(class="form-label") }}
+                    {{ form.user_name(class="form-control", value = updated_user.user_name) }}
+                    <br/>
+                    {{ form.email.label(class="form-label") }}
+                    {{ form.email(class="form-control", value = updated_user.email) }}
+                    <br/>
+                    {{ form.job_profile.label(class="form-label") }}
+                    {{ form.job_profile(class="form-control", value = updated_user.job_profile) }}
+                    <br/>
+                    {{ form.submit(class="btn btn-secondary") }}
+    
+                </form>
+            </p>
+        </div>
+    </div>
+
+    <br/><br/>
 
 {% endblock %}
