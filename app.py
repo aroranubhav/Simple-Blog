@@ -1,109 +1,32 @@
-from tokenize import String
-from turtle import update
-from typing import final
 from flask import Flask, render_template, flash, request, redirect, url_for, make_response
-from flask_wtf import FlaskForm
-from wtforms import FormField, StringField, SubmitField, EmailField, PasswordField, BooleanField, ValidationError
-from wtforms.validators import DataRequired, Email, EqualTo, Length
 from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime
 from flask_migrate import Migrate
-import os
 import sys
-from werkzeug.security import generate_password_hash, check_password_hash
-from wtforms.widgets import TextArea
-from flask_login import UserMixin, login_user, logout_user, current_user, LoginManager, login_required
+from werkzeug.security import check_password_hash
+from flask_login import login_user, logout_user, current_user, LoginManager, login_required
+from webforms import LoginForm, PostForm, UserForm, NameForm, PasswordForm
 
 #flask instance
 app = Flask(__name__)
-
-#sqlite db config
-#app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///users.db'
-
-#mysql db config --> mysql://username:password@localhost/db_nameex
-#app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://root:AlMax579@localhost/users'
-
-#setting up postgres
-app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://maxi:AlMax579@localhost:5432/users'
-app.config['SECRET_KEY'] = os.urandom(32)
+app.config.from_object('config')
 
 #initialising sqlalchemy instance
 db = SQLAlchemy(app = app)
 
+#initialising migrate library
 migrate = Migrate(app = app, db = db)
 
+#setting up login manager
 login_manager = LoginManager()
 login_manager.init_app(app = app)
 login_manager.login_view = 'login'
 
+from models import Users, Posts
+
 @login_manager.user_loader
 def load_user(user_id):
     return Users.query.get(int(user_id))
-
-class Users(db.Model, UserMixin):
-    __tablename__ = 'users'
-    id = db.Column(db.Integer, primary_key = True)
-    name = db.Column(db.String(100), nullable = False)
-    user_name = db.Column(db.String(20), nullable = False, unique = True)
-    email = db.Column(db.String(120), nullable = False, unique = True)
-    job_profile = db.Column(db.String(120))
-    date_added = db.Column(db.DateTime, default = datetime.utcnow)
-    password_hash = db.Column(db.String(150))
-
-    @property
-    def password(self):
-        raise AttributeError('Password is not in a readable format!')
-    
-    @password.setter
-    def password(self, password):
-        self.password_hash = generate_password_hash(password = password)
-    
-    def verify_password(self, password):
-        return check_password_hash(pwhash = self.password_hash, password = password)
-
-    def __repr__(self) -> str:
-        return f'<Name {self.name}> Username {self.user_name} Email {self.email} Password {self.password_hash}'
-
-class Posts(db.Model):
-    id = db.Column(db.Integer, primary_key = True)
-    title = db.Column(db.String(250))
-    content = db.Column(db.Text)
-    author = db.Column(db.String(250))
-    date_posted = db.Column(db.DateTime, default = datetime.utcnow)
-    slug = db.Column(db.String(250))
-
-class PostForm(FlaskForm):
-    title = StringField('Title', validators = [DataRequired(message = 'This field requires a value')])
-    content = StringField('Content', validators =  [DataRequired(message = 'This field requires a value')], 
-        widget = TextArea())
-    author = StringField('Author', validators =  [DataRequired(message = 'This field requires a value')])
-    slug = StringField('Slug', validators =  [DataRequired(message = 'This field requires a value')])
-    submit = SubmitField('Submit')
-
-class NameForm(FlaskForm):
-    name = StringField("What's your name?", validators = [DataRequired(message = 'This field requires a value')])
-    submit = SubmitField("Submit")
-
-class PasswordForm(FlaskForm):
-    email = EmailField('Email', validators = [DataRequired(message = 'This field requires a value')])
-    password = PasswordField('Password', validators = [DataRequired()])
-    submit = SubmitField('Submit')
-
-class UserForm(FlaskForm):
-    name = StringField('Name', validators = [DataRequired(message = 'This field requires a value')])
-    user_name = StringField('Username', validators = [DataRequired(message = 'This field requires a value')])
-    email = EmailField('Email', validators = [DataRequired(message = 'This field requires a value'), 
-                                Email(message = 'Please input a vaild email address!')])
-    job_profile = StringField('Job Profile')
-    password = PasswordField('Password', validators = [DataRequired(), EqualTo('password_confirm',
-                                message = 'Passwords must match!')])
-    password_confirm = PasswordField('Confirm Password')
-    submit = SubmitField('Submit')
-
-class LoginForm(FlaskForm):
-    user_name = StringField('Username', validators = [DataRequired(message = 'This field requires a value')])
-    password = PasswordField('Password', validators = [DataRequired(message = 'This field requires a value')])
-    submit = SubmitField('Login')
 
 @app.route('/')
 def index():
