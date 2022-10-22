@@ -26,7 +26,7 @@ class PostForm(FlaskForm):
     title = StringField('Title', validators = [DataRequired(message = 'This field requires a value')])
     content = StringField('Content', validators =  [DataRequired(message = 'This field requires a value')], 
         widget = TextArea())
-    author = StringField('Author', validators =  [DataRequired(message = 'This field requires a value')])
+    author = StringField('Author')
     slug = StringField('Slug', validators =  [DataRequired(message = 'This field requires a value')])
     submit = SubmitField('Submit')
 

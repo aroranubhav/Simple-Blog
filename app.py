@@ -244,9 +244,9 @@ def add_post():
         if form.validate_on_submit():
             post = Posts()
             form.populate_obj(post)
+            post.user_id = current_user.id
             #clearing the form
             form.title.data = ''
-            form.author.data = ''
             form.content.data = ''
             form.slug.data = ''
             #adding post to db
@@ -292,7 +292,6 @@ def edit_blog_post(post_id):
         return redirect(url_for('get_post', post_id = post.id))
     
     form.title.data = post.title
-    form.author.data = post.author
     form.slug.data = post.slug
     form.content.data = post.content
 
