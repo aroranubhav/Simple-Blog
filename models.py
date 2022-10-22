@@ -12,6 +12,7 @@ class Users(db.Model, UserMixin):
     job_profile = db.Column(db.String(120))
     date_added = db.Column(db.DateTime, default = datetime.utcnow)
     password_hash = db.Column(db.String(150))
+    posts = db.relationship('Posts', backref = 'user', lazy = True)
 
     @property
     def password(self):
@@ -28,9 +29,11 @@ class Users(db.Model, UserMixin):
         return f'<Name {self.name}> Username {self.user_name} Email {self.email} Password {self.password_hash}'
 
 class Posts(db.Model):
+    __tablename__ = 'posts'
     id = db.Column(db.Integer, primary_key = True)
     title = db.Column(db.String(250))
     content = db.Column(db.Text)
-    author = db.Column(db.String(250))
+    #author = db.Column(db.String(250))
     date_posted = db.Column(db.DateTime, default = datetime.utcnow)
     slug = db.Column(db.String(250))
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'))
