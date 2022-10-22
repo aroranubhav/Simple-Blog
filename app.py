@@ -300,6 +300,7 @@ def edit_blog_post(post_id):
         post = post)
 
 @app.route('/posts/delete/<int:post_id>')
+@login_required
 def delete_blog_post(post_id):
     post = Posts.query.get_or_404(post_id)
 
